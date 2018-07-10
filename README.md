@@ -1,3 +1,5 @@
+# auto_conf_wb
+auto configure webpack and babel
 
 Since installing `` and `` can be a real headache I created this simple `` script so they everything can be set up automatically
 
