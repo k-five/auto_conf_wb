@@ -1,0 +1,94 @@
+#!/bin/bash
+which node &> /dev/null
+if [[ $? == 1 ]]; then
+	echo "first install node.js"; exit 1;
+fi
+
+# get the name of the repo
+read -p 'Enter a name with no space and hit [ENTER]: '  dir_name
+echo  -ne "trying to create \033[1;32m$dir_name\033[0m and \033[1;36mcd\033[0m into it ..."
+mkdir $dir_name
+cd $dir_name
+echo ' okay'
+
+echo -ne "creating \033[1;32mpublic\033[0m and \033[1;32msrc\033[0m directory ..."
+mkdir 'public' 'src'
+echo ' okay'
+
+echo -ne "trying to initiate \033[1;32mpackage.json\033[0m ..."
+npm init -y &> npm.output.log
+echo ' okay'
+
+echo -e "trying to install \033[1;32mwebpack\033[0m ..."
+npm install -D webpack webpack-cli
+echo ' okay'
+
+echo -e "trying to install \033[1;32mbabel\033[0m ..."
+npm install -D babel-core babel-cli babel-loader webpack-dev-server babel-preset-es2015 babel-polyfill
+echo ' okay'
+
+# we can use either Perl or sed, I usually use Perl
+echo -ne "trying to configure \033[1;32mpackage.json\033[0m file ..."
+#perl -i.bak -wple 's/(^ +)("test"[^\n]+)/$1"start" : "webpack-dev-server",\n$1"webpack" : "webpack",\n$1"babel" : ".\/node_modules\/.bin\/babel src\/ -d public\/"/g' package.json
+#perl -i.bak2 -wple 's/(^ +)},/$1},\n$1"babel" : {\n$1$1"presets" : ["es2015"]\n$1},/g' package.json
+sed -i.bak 's/\(^ \+\)\"test"[^\n]\+/\1"start" : "webpack-dev-server",\n\1"webpack" : "webpack",\n\1"babel" : ".\/node_modules\/.bin\/babel src\/ -d public\/"/g' package.json
+sed -i.bak2 's/\(^ \+\)},/\1},\n\1"babel" : {\n\1\1"presets" : ["es2015"]\n\1},/g' package.json
+echo ' okay'
+
+echo
+
+echo -ne "creating \033[1;32mindex.html\033[0m and put it in \033[1;36mpublic\033[0m ..."
+echo '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+    <h1>Hello ES6</h1>
+    <script src="main.bundle.js"></script>
+</body>
+</html>' > ./public/index.html
+echo ' okay'
+
+echo -ne "creating \033[1;32mfirst.js\033[0m and put it in \033[1;36msrc\033[0m ..."
+echo 'const sayHi = () =>  console.log( "this is first.js file" );
+sayHi();' > ./src/first.js
+echo ' okay'
+
+echo -ne "creating \033[1;32msecond.js\033[0m and put it in \033[1;36msrc\033[0m ..."
+echo 'console.log( "this is second.js file" );' > ./src/second.js
+echo ' okay'
+
+echo -ne "creating \033[1;32mwebpack.config.js\033[0m and put it in \033[1;36m.\033[0m ..."
+echo 'var path = require("path");
+var webpack = require("webpack");
+
+module.exports = {
+    mode: "development",
+    entry: [ "./src/first.js", "./src/second.js" ],
+    output: {
+        path: path.resolve( __dirname, "public" ),
+        filename: "main.bundle.js",
+    },
+    devServer: {
+        inline: true,
+        contentBase: __dirname + "./src",
+        port: 7008
+    },
+    module: {
+        rules: [{
+            test: /\.js$/,
+            exclude: /node_modules/,
+            loader: ["babel-loader"]
+        }]
+    }
+}' > webpack.config.js
+echo ' okay'
+echo
+echo 'finished'
+echo
+echo -e "please \033[1;36mcd\033[0m into \"$dir_name\" and ..."
+echo -e "try: \033[1;32mnpm run webpack\033[0m"
+echo "or"
+echo -e "try: \033[1;32mnpm run babel\033[0m"
